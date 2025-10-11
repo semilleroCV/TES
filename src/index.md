@@ -18,10 +18,10 @@ toc: false
 
 ```js
 const timeline = [
-  {year: new Date(1990, 0, 1), label: "ADE", path: "/algorithms/ade", orientation: "up"},
+  {year: new Date(1990, 0, 1), label: "ADE", path: "./algorithms/ade", orientation: "up"},
   {year: new Date(1992, 0, 1), label: "Emmisivity Bounds", path: "/algorithms/emmisivity-bounds", orientation: "down"},
-  {year: new Date(1994, 0, 1), label: "MMD", path: "/algorithms/mmd", orientation: "up"},
-  {year: new Date(1985, 0, 1), label: "NEM", path: "/algorithms/nem", orientation: "down"}
+  {year: new Date(1994, 0, 1), label: "MMD", path: "./algorithms/mmd", orientation: "up"},
+  {year: new Date(1985, 0, 1), label: "NEM", path: "./algorithms/nem", orientation: "down"}
 ];
 ```
 
