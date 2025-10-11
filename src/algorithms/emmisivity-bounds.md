@@ -10,36 +10,36 @@ toc: false
 
 <div class="alg-container">
   <header class="alg-hero">
-    <h1>ADE</h1>
-    <p>Approximate Disaggregation of Emissivity for TES.</p>
+    <h1>Emissivity Bounds</h1>
+    <p>TES with hard/soft bounds on spectral emissivity.</p>
   </header>
 
   <section class="alg-meta">
-    <div><strong>Authors</strong>: Jane Doe, John Roe</div>
+    <div><strong>Authors</strong>: Jane Doe, Alex Smith</div>
     <span class="sep"></span>
-    <div><strong>Date</strong>: 1990</div>
+    <div><strong>Date</strong>: 1992</div>
   </section>
 
   
 
   <section class="alg-section alg-callout">
     <h2>Key Idea</h2>
-    <p>Use bounded emissivity priors with iterative updates of temperature.</p>
+    <p>Use prior knowledge of material emissivity ranges to regularize TES.</p>
   </section>
 
   <section class="alg-section">
     <h2>Steps</h2>
     <ol>
-      <li>Atmospheric correction to surface-leaving radiance.</li>
-      <li>Initialize ${tex`T`} from brightness temperature.</li>
-      <li>Iteratively update ${tex`\varepsilon`} and ${tex`T`} with constraints.</li>
+      <li>Set lower/upper bounds for each band.</li>
+      <li>Optimize ${tex`T, \varepsilon`} subject to bounds.</li>
+      <li>Refine using smoothness across wavelength.</li>
     </ol>
   </section>
 
   <section class="alg-section alg-refs">
     <h3>References</h3>
     <ol>
-      <li>Author, A., ADE method, Journal, 1990.</li>
+      <li>Author, B., Emissivity bounds for TES, Conf., 1992.</li>
     </ol>
   </section>
 </div>

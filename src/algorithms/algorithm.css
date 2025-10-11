@@ -1,0 +1,98 @@
+:root {
+  --alg-width: 920px;
+}
+
+.alg-container {
+  max-width: var(--alg-width);
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.alg-hero {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.alg-hero h1 {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+}
+
+.alg-hero p {
+  color: var(--theme-foreground-muted);
+  margin: 0.5rem 0 0;
+}
+
+.alg-section {
+  margin: 2rem 0;
+}
+
+.alg-section h2 {
+  font-size: 1.35rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+/* Meta row */
+.alg-meta {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0.5rem 0 1.75rem;
+  color: var(--theme-foreground-muted);
+  font-size: 0.95rem;
+  justify-content: center;
+}
+
+.alg-meta .sep::before {
+  content: "·";
+  margin: 0 0.5rem;
+}
+
+.alg-callout {
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--theme-background) 85%, var(--theme-foreground) 15%);
+}
+
+/* References section */
+.alg-refs {
+  margin-top: 2.5rem;
+  padding: 2rem 1.25rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--theme-background) 70%, var(--theme-foreground) 12%), color-mix(in oklab, var(--theme-background) 80%, var(--theme-foreground) 6%));
+}
+
+.alg-refs h3 {
+  margin-top: 0;
+}
+
+.alg-refs ol {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.alg-refs li + li {
+  margin-top: 0.35rem;
+}
+
+/* Floating back arrow */
+.alg-back {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  text-decoration: none;
+  color: var(--theme-foreground);
+  font-size: 22px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.alg-back:hover {
+  transform: translateX(-2px);
+  opacity: 1;
+}

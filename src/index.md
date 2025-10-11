@@ -4,7 +4,7 @@ toc: false
 
 <section class="container">
 <div class="hero">
-  <h1>TES</h1>
+  <h1><img class="hero-logo" src="./favicon.png" alt="TES icon">TES</h1>
   <h2>Temperature–Emissivity Separation</h2>
 </div>
 
@@ -18,10 +18,10 @@ toc: false
 
 ```js
 const timeline = [
-  {year: new Date(1980, 0, 1), label: "ADE", path: "/algorithms/ade", orientation: "up"},
-  {year: new Date(1982, 0, 1), label: "CLASSIFICATION", path: "/algorithms/classification", orientation: "down"},
-  {year: new Date(2003, 0, 1), label: "ARTEMISS", path: "/algorithms/artemiss", orientation: "up"},
-  {year: new Date(2010, 0, 1), label: "ISTA", path: "/algorithms/ista", orientation: "down"}
+  {year: new Date(1990, 0, 1), label: "ADE", path: "/algorithms/ade", orientation: "up"},
+  {year: new Date(1992, 0, 1), label: "Emmisivity Bounds", path: "/algorithms/emmisivity-bounds", orientation: "down"},
+  {year: new Date(1994, 0, 1), label: "MMD", path: "/algorithms/mmd", orientation: "up"},
+  {year: new Date(1985, 0, 1), label: "NEM", path: "/algorithms/nem", orientation: "down"}
 ];
 ```
 
@@ -137,10 +137,19 @@ function renderTimeline(width) {
   font-size: 14vw;
   font-weight: 900;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   background: linear-gradient(30deg, var(--theme-foreground-focus), currentColor);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.hero h1 .hero-logo {
+  height: 0.9em;
+  width: auto;
+  display: block;
 }
 
 .hero h2 {
