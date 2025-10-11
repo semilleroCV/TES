@@ -17,3 +17,19 @@ code, pre {
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 }
 
+/* Fit landing page without scroll on typical laptops */
+main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main > *:last-child {
+  margin-bottom: 2rem;
+}
+
+/* Remove underline for timeline links */
+.timeline a, .timeline a:hover, .timeline a:focus {
+  text-decoration: none;
+}
+
