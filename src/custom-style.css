@@ -22,6 +22,7 @@ main {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  line-height: 1.7 !important;
 }
 
 main > *:last-child {
@@ -32,4 +33,22 @@ main > *:last-child {
 .timeline a, .timeline a:hover, .timeline a:focus {
   text-decoration: none;
 }
+
+p, table, figure, figcaption, h1, h2, h3, h4, h5, h6, .katex-display {
+  max-width: none !important;
+}
+
+/* Center very long KaTeX equations even when they overflow the text column */
+.eq-balance { position: relative; overflow: visible; }
+.eq-balance .katex-display { overflow: visible !important; text-align: left !important; }
+.eq-balance .katex-display > .katex {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-block;
+}
+
+/* For numbered equations, revert to KaTeX's default full-width layout so the tag sits on the right */
+.eq-balance.numbered .katex-display { text-align: center !important; }
+.eq-balance.numbered .katex-display > .katex { left: 0; transform: none; display: block; }
 

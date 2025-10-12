@@ -4,6 +4,10 @@ status: draft
 
 <link rel="stylesheet" href="/algorithms/algorithm.css">
 
+<div>
+<a href="/" class="alg-back" aria-label="Back to home">←</a>
+</div>
+
 <div class="alg-container">
   <header class="alg-hero">
     <h1>Algorithm Title</h1>
@@ -11,18 +15,9 @@ status: draft
   </header>
 
   <section class="alg-meta">
-    <div><strong>Year</strong>: 1990</div>
-    <div><strong>Category</strong>: TES</div>
-    <div><strong>Authors</strong>: Jane Doe et al.</div>
-    <div><strong>Links</strong>: <span>Paper (TBD)</span></div>
-  </section>
-
-  <section class="alg-section">
-    <h2>Overview</h2>
-    <p>
-      Provide a concise overview. You can insert math like ${tex`B_\lambda(T)`}
-      or inline code <code>likeThis()</code>.
-    </p>
+    <div><strong>Authors</strong>: Jane Doe, John Roe</div>
+    <span class="sep"></span>
+    <div><strong>Date</strong>: 1990</div>
   </section>
 
   <section class="alg-section alg-callout">

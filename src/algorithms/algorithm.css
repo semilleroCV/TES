@@ -1,5 +1,5 @@
 :root {
-  --alg-width: 920px;
+  --alg-width: 1120px;
 }
 
 .alg-container {
@@ -55,6 +55,51 @@
   padding: 1rem 1.25rem;
   border-radius: 10px;
   background: color-mix(in oklab, var(--theme-background) 85%, var(--theme-foreground) 15%);
+}
+
+/* Narrow text width (does not affect plots) */
+.alg-narrow {
+  max-width: 68ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Split layout for formulas and figures */
+.alg-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: center; /* vertically center formula with figure */
+  margin: 1rem 0 2rem;
+}
+
+@media (min-width: 960px) {
+  .alg-split {
+    grid-template-columns: minmax(320px, 1fr) minmax(0, 1.6fr);
+    justify-items: center;
+  }
+}
+
+.alg-formula {
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--theme-background) 82%, var(--theme-foreground) 10%);
+  max-width: 520px;
+}
+
+.alg-figure {
+  padding: 0.5rem;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--theme-background) 92%, var(--theme-foreground) 8%);
+}
+
+/* Allow figure to bleed to the right on wide viewports */
+@media (min-width: 1200px) {
+  /* widen the split area symmetrically so the figure can be larger but centered */
+  .alg-split {
+    margin-left: -120px;
+    margin-right: -120px;
+  }
 }
 
 /* References section */
