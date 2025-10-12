@@ -519,7 +519,6 @@ toc: false
     <ol>
       <li>Kealy, Peter S. "Estimation of emissivity and temperature using alpha coefficients." Proceedings of the Second Thermal Infrared Multispectral Scanner (TIMS) Workshop. 1990.</li>
       <li>Gillespie, Alan R., et al. "Temperature/emissivity separation algorithm theoretical basis document, version 2.4." ATBD contract NAS5-31372, NASA (1999).</li>
-
     </ol>
   </section>
 </div>
