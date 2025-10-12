@@ -12,7 +12,7 @@ toc: false
 <div class="alg-container">
   <header class="alg-hero">
     <h1>ADE</h1>
-    <p>Alpha Derived Emissivity.</p>
+    <p>Alpha Derived Emissivity</p>
   </header>
 
   <section class="alg-meta">
