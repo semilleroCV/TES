@@ -501,7 +501,7 @@ toc: false
    \;\underbrace{\Big(\lambda_i\,\ln R_i - \tfrac{1}{n}\sum_{j}\lambda_j\,\ln R_j\Big)}_{\text{\small data}}\; +\; \underbrace{\kappa_i}_{\text{\small constant}} \tag{1}
   `}</div>
 
-  <h4 style="margin:0.9rem 0 0.35rem">Defining \(\alpha_i\) and estimating the mean</h4>
+  <h4 style="margin:0.9rem 0 0.35rem">Defining ${tex`\alpha_i`} and estimating the mean</h4>
   <p>Define the centered emissivity term</p>
   <div class="eq-balance">${tex.block`\alpha_i\;:=\;\lambda_i\,\ln\varepsilon_i\; -\;\mu_\alpha`}</div>
   <p>and let its sample variance for a spectrum be</p>
@@ -510,6 +510,10 @@ toc: false
      the deviations (via ${tex`\nu_\alpha`}) to the offset ${tex`\mu_\alpha`} across spectra:</p>
   <div class="eq-balance numbered">${tex.block`\mu_\alpha\;\approx\;c\;\nu_\alpha^{\,1/\chi} \tag{2}`}</div>
   <p >Here ${tex`c`} and ${tex`\chi`} are fitted constants determined from laboratory calibration.</p>
+  <p> Here is a example figure of this regression from the original paper:</p>
+  <div class="alg-figure" style="max-width:720px;margin:0.5rem auto 1.5rem">
+    <img src="/algorithms/assets/mean_mmd.png" alt="Alpha Regression" style="width:100%;height:auto;">
+  </div>
   <p>With an estimate of ${tex`\mu_\alpha`} from Eq.&nbsp;(2) and the identity in Eq.&nbsp;(1), we can recover emissivity per band:</p>
   <div class="eq-balance">${tex.block`\varepsilon_i\;=\;\exp\!\left(\frac{\mu_\alpha\; +\; \kappa_i\; +\; \Big(\lambda_i\,\ln R_i\; -\; \tfrac{1}{n}\sum_{j}\lambda_j\,\ln R_j\Big)}{\lambda_i}\right)`}</div>
   </section>
