@@ -23,13 +23,13 @@ toc: false
   <section class="alg-section alg-narrow">
     <p>The emissivity bounds method addresses the fundamental challenge in thermal remote sensing: separating temperature from emissivity. With N spectral channels, we have N+1 unknowns (N emissivities and 1 temperature) but only N equations. Rather than assuming constant emissivity or using iterative optimization, this method computes realistic bounds on both parameters.</p>
 
-    <h3 style="margin:2rem 0 1rem">The Underdetermined Problem</h3>
+  <h3 style="margin:2rem 0 1rem">The Underdetermined Problem</h3>
     
-    <p>For each channel <em>n</em>, the measured radiance ${tex`F_n`} relates to temperature ${tex`T`} and emissivity ${tex`\varepsilon_n`} through the band-integrated blackbody function:</p>
+  <p>For each channel <em>n</em>, the measured radiance ${tex`F_n`} relates to temperature ${tex`T`} and emissivity ${tex`\varepsilon_n`} through the band-integrated blackbody function:</p>
 
-    <p>${tex.block`F_n = \varepsilon_n B_n(T)`}</p>
+  <p>${tex.block`F_n = \varepsilon_n B_n(T)`}</p>
 
-    <p>where ${tex`B_n(T)`} is the band-integrated Planck function for channel <em>n</em>.</p>
+  <p>where ${tex`B_n(T)`} is the band-integrated Planck function for channel <em>n</em>.</p>
 
 ```js
 // Constants for TIMS-like channels
@@ -46,16 +46,12 @@ const channels = [
   {name: 'Channel 5', lambda: 10.6, a: 0.09, b: 0.005, c: 0.0000016},
   {name: 'Channel 6', lambda: 11.2, a: 0.10, b: 0.0055, c: 0.0000017}
 ];
-```
 
-```js
 // Band-integrated blackbody function (W/cm²/sr)
 function B_n(T, channel) {
   return channel.a + channel.b * T + channel.c * T * T;
 }
-```
 
-```js
 // Inverse function: get T from F and epsilon
 function getTemp(F, eps, channel) {
   const a = channel.a - F / eps;
@@ -80,25 +76,29 @@ const data2 = eps_range.map(eps => ({eps, T: getTemp(F2, eps, channels[1])}));
 <div class="alg-figure">
 
 ```js
-Plot.plot({
-  width: 640,
-  height: 400,
-  marginLeft: 72,
-  marginBottom: 44,
-  grid: true,
-  x: {label: "Emissivity ε"},
-  y: {label: "Temperature (K)"},
-  marks: [
-    Plot.line(data1, {x: "eps", y: "T", stroke: "#e74c3c", strokeWidth: 2.5}),
-    Plot.line(data2, {x: "eps", y: "T", stroke: "#3498db", strokeWidth: 2.5}),
-    Plot.text([{x: 0.92, y: 295, text: "Channel 1"}], {
-      x: "x", y: "y", text: "text", fill: "#e74c3c", fontSize: 14
-    }),
-    Plot.text([{x: 0.92, y: 285, text: "Channel 2"}], {
-      x: "x", y: "y", text: "text", fill: "#3498db", fontSize: 14
-    })
-  ]
-})
+(async () => {
+  const plot = Plot.plot({
+    width: 640,
+    height: 400,
+    marginLeft: 72,
+    marginBottom: 44,
+    grid: true,
+    x: {label: "Emissivity ε"},
+    y: {label: "Temperature (K)"},
+    marks: [
+      Plot.line(data1, {x: "eps", y: "T", stroke: "#e74c3c", strokeWidth: 2.5}),
+      Plot.line(data2, {x: "eps", y: "T", stroke: "#3498db", strokeWidth: 2.5}),
+      Plot.text([{x: 0.92, y: 295, text: "Channel 1"}], {
+        x: "x", y: "y", text: "text", fill: "#e74c3c", fontSize: 14
+      }),
+      Plot.text([{x: 0.92, y: 285, text: "Channel 2"}], {
+        x: "x", y: "y", text: "text", fill: "#3498db", fontSize: 14
+      })
+    ]
+  });
+  
+  return plot;
+})()
 ```
 
 </div>
@@ -113,38 +113,73 @@ Plot.plot({
 
 <p>This approximation is accurate to within 0.03 K over the range 265-310 K, making it suitable for Earth surface applications.</p>
 
-```js
-const channelIndex = view(Inputs.range([0, 5], {
-  step: 1,
-  value: 0,
-  label: "Channel",
-  format: i => channels[i].name
-}));
-
-
 <div class="alg-figure">
 
-
-{
-  const channel = channels[channelIndex];
-  const T_range = d3.range(265, 310.5, 0.5);
-  const data = T_range.map(T => ({T, B: B_n(T, channel)}));
-
-  return Plot.plot({
-    width: 640,
-    height: 400,
-    marginLeft: 72,
-    marginBottom: 44,
-    grid: true,
-    x: {label: "Temperature (K)"},
-    y: {label: "Band-pass Flux (W/cm²/sr)"},
-    marks: [
-      Plot.line(data, {x: "T", y: "B", stroke: "#2ecc71", strokeWidth: 2.5})
-    ]
-  });
-}
-```
 ```js
+(async () => {
+  const container = document.createElement("div");
+  
+  function drawPlot(channelIndex) {
+    const channel = channels[channelIndex];
+    const T_range = d3.range(265, 310.5, 0.5);
+    const data = T_range.map(T => ({T, B: B_n(T, channel)}));
+
+    return Plot.plot({
+      width: 640,
+      height: 400,
+      marginLeft: 72,
+      marginBottom: 44,
+      grid: true,
+      x: {label: "Temperature (K)"},
+      y: {label: "Band-pass Flux (W/cm²/sr)"},
+      marks: [
+        Plot.line(data, {x: "T", y: "B", stroke: "#2ecc71", strokeWidth: 2.5})
+      ]
+    });
+  }
+  
+  // Initial render
+  let currentChannel = 0;
+  let plot = drawPlot(currentChannel);
+  container.append(plot);
+  
+  // Controls
+  const controls = document.createElement("div");
+  controls.style.display = "flex";
+  controls.style.alignItems = "center";
+  controls.style.gap = "0.5rem";
+  controls.style.marginTop = "0.75rem";
+  
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.min = "0";
+  slider.max = "5";
+  slider.step = "1";
+  slider.value = String(currentChannel);
+  slider.style.flex = "1 1 auto";
+  
+  const label = document.createElement("span");
+  label.textContent = channels[currentChannel].name;
+  label.style.minWidth = "6rem";
+  label.style.textAlign = "right";
+  label.style.color = "var(--theme-foreground)";
+  label.style.fontWeight = "600";
+  
+  controls.append(slider, label);
+  container.append(controls);
+  
+  slider.addEventListener('input', () => {
+    currentChannel = Number(slider.value);
+    label.textContent = channels[currentChannel].name;
+    const next = drawPlot(currentChannel);
+    plot.replaceWith(next);
+    plot = next;
+  });
+  
+  return container;
+})()
+```
+
 </div>
 
 <p style="text-align:center;color:var(--theme-foreground-muted);margin:0.35rem 0 1.5rem">Band-pass flux vs temperature with quadratic fit (TIMS channel simulation).</p>
@@ -159,65 +194,37 @@ const channelIndex = view(Inputs.range([0, 5], {
 
 <p>${tex.block`T = \delta(F_n, \varepsilon_n) = \frac{-b_n + \sqrt{b_n^2 - 4c_n(a_n - F_n/\varepsilon_n)}}{2c_n}`}</p>
 
-```js
-const eps1_min = view(Inputs.range([0.8, 1.0], {
-  step: 0.01,
-  value: 0.97,
-  label: "ε₁ min"
-}));
-```
-
-```js
-const eps1_max = view(Inputs.range([0.8, 1.0], {
-  step: 0.01,
-  value: 1.00,
-  label: "ε₁ max"
-}));
-```
-
-```js
-const eps2_min = view(Inputs.range([0.8, 1.0], {
-  step: 0.01,
-  value: 0.97,
-  label: "ε₂ min"
-}));
-```
-
-```js
-const eps2_max = view(Inputs.range([0.8, 1.0], {
-  step: 0.01,
-  value: 1.00,
-  label: "ε₂ max"
-}));
-```
-
 <div class="alg-figure">
 
 ```js
-{
-  const T_true = 278;
-  const eps1_true = 0.985;
-  const eps2_true = 0.980;
-  const F1 = eps1_true * B_n(T_true, channels[0]);
-  const F2 = eps2_true * B_n(T_true, channels[1]);
+(async () => {
+  const container = document.createElement("div");
+  
+  function drawBoundsPlot(eps1_min, eps1_max, eps2_min, eps2_max) {
+    const T_true = 278;
+    const eps1_true = 0.985;
+    const eps2_true = 0.980;
+    const F1 = eps1_true * B_n(T_true, channels[0]);
+    const F2 = eps2_true * B_n(T_true, channels[1]);
 
-  const eps_range = d3.range(0.8, 1.001, 0.002);
-  const data1 = eps_range.map(eps => ({eps, T: getTemp(F1, eps, channels[0])}));
-  const data2 = eps_range.map(eps => ({eps, T: getTemp(F2, eps, channels[1])}));
+    const eps_range = d3.range(0.8, 1.001, 0.002);
+    const data1 = eps_range.map(eps => ({eps, T: getTemp(F1, eps, channels[0])}));
+    const data2 = eps_range.map(eps => ({eps, T: getTemp(F2, eps, channels[1])}));
 
-  // Calculate bounds
-  const T1_max = getTemp(F1, eps1_min, channels[0]);
-  const T1_min = getTemp(F1, eps1_max, channels[0]);
-  const T2_max = getTemp(F2, eps2_min, channels[1]);
-  const T2_min = getTemp(F2, eps2_max, channels[1]);
+    // Calculate bounds
+    const T1_max = getTemp(F1, eps1_min, channels[0]);
+    const T1_min = getTemp(F1, eps1_max, channels[0]);
+    const T2_max = getTemp(F2, eps2_min, channels[1]);
+    const T2_min = getTemp(F2, eps2_max, channels[1]);
 
-  const T_final_min = Math.max(T1_min, T2_min);
-  const T_final_max = Math.min(T1_max, T2_max);
-  const T_estimate = (T_final_min + T_final_max) / 2;
-  const T_error = (T_final_max - T_final_min) / 2;
+    const T_final_min = Math.max(T1_min, T2_min);
+    const T_final_max = Math.min(T1_max, T2_max);
+    const T_estimate = (T_final_min + T_final_max) / 2;
+    const T_error = (T_final_max - T_final_min) / 2;
 
-  return html`
-    ${Plot.plot({
+    const plotDiv = document.createElement("div");
+    
+    const plot = Plot.plot({
       width: 640,
       height: 450,
       marginLeft: 72,
@@ -246,17 +253,103 @@ const eps2_max = view(Inputs.range([0.8, 1.0], {
           x: "x", y: "y", text: "text", fill: "#3498db", fontSize: 14
         })
       ]
-    })}
-    <div style="margin-top: 1rem; padding: 1rem; background: #e8f4f8; border-radius: 6px; border-left: 4px solid #27ae60;">
+    });
+    
+    plotDiv.appendChild(plot);
+    
+    const resultsBox = document.createElement("div");
+    resultsBox.style.marginTop = "1rem";
+    resultsBox.style.padding = "1rem";
+    resultsBox.style.background = "#e8f4f8";
+    resultsBox.style.borderRadius = "6px";
+    resultsBox.style.borderLeft = "4px solid #27ae60";
+    
+    resultsBox.innerHTML = `
       <div style="font-weight: 600; margin-bottom: 0.5rem; color: #1a5490; font-family: var(--sans-serif);">Final Temperature Bounds:</div>
       <div style="font-size: 1.05rem; font-family: var(--serif);">
         <strong>T<sub>min</sub></strong> = ${T_final_min.toFixed(2)} K, 
         <strong>T<sub>max</sub></strong> = ${T_final_max.toFixed(2)} K<br>
         <strong>Estimate:</strong> T̂ = ${T_estimate.toFixed(2)} K ± ${T_error.toFixed(2)} K
       </div>
-    </div>
-  `;
-}
+    `;
+    
+    plotDiv.appendChild(resultsBox);
+    return plotDiv;
+  }
+  
+  // Initial values
+  let eps1_min = 0.97, eps1_max = 1.00;
+  let eps2_min = 0.97, eps2_max = 1.00;
+  
+  let plotDiv = drawBoundsPlot(eps1_min, eps1_max, eps2_min, eps2_max);
+  container.append(plotDiv);
+  
+  // Controls
+  const controlsDiv = document.createElement("div");
+  controlsDiv.style.display = "grid";
+  controlsDiv.style.gridTemplateColumns = "repeat(2, 1fr)";
+  controlsDiv.style.gap = "1rem";
+  controlsDiv.style.marginTop = "1rem";
+  
+  function createSlider(label, min, max, initialValue, onChange) {
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+    wrapper.style.gap = "0.25rem";
+    
+    const labelEl = document.createElement("label");
+    labelEl.textContent = label;
+    labelEl.style.fontSize = "0.9rem";
+    labelEl.style.color = "var(--theme-foreground-muted)";
+    
+    const sliderWrapper = document.createElement("div");
+    sliderWrapper.style.display = "flex";
+    sliderWrapper.style.alignItems = "center";
+    sliderWrapper.style.gap = "0.5rem";
+    
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = String(min);
+    slider.max = String(max);
+    slider.step = "0.01";
+    slider.value = String(initialValue);
+    slider.style.flex = "1 1 auto";
+    
+    const valueEl = document.createElement("span");
+    valueEl.textContent = initialValue.toFixed(2);
+    valueEl.style.minWidth = "3rem";
+    valueEl.style.textAlign = "right";
+    valueEl.style.fontWeight = "600";
+    valueEl.style.fontVariantNumeric = "tabular-nums";
+    
+    slider.addEventListener('input', () => {
+      const value = Number(slider.value);
+      valueEl.textContent = value.toFixed(2);
+      onChange(value);
+    });
+    
+    sliderWrapper.append(slider, valueEl);
+    wrapper.append(labelEl, sliderWrapper);
+    return wrapper;
+  }
+  
+  function updatePlot() {
+    const next = drawBoundsPlot(eps1_min, eps1_max, eps2_min, eps2_max);
+    plotDiv.replaceWith(next);
+    plotDiv = next;
+  }
+  
+  controlsDiv.append(
+    createSlider("ε₁ min", 0.8, 1.0, eps1_min, v => { eps1_min = v; updatePlot(); }),
+    createSlider("ε₁ max", 0.8, 1.0, eps1_max, v => { eps1_max = v; updatePlot(); }),
+    createSlider("ε₂ min", 0.8, 1.0, eps2_min, v => { eps2_min = v; updatePlot(); }),
+    createSlider("ε₂ max", 0.8, 1.0, eps2_max, v => { eps2_max = v; updatePlot(); })
+  );
+  
+  container.append(controlsDiv);
+  
+  return container;
+})()
 ```
 
 </div>
@@ -265,7 +358,7 @@ const eps2_max = view(Inputs.range([0.8, 1.0], {
 
 <p>With N channels, we obtain N independent sets of temperature bounds. The true temperature must satisfy all constraints simultaneously, so we take the intersection:</p>
 
-<p>${tex.block`T_{\text{min}} = \max_n\{T_{n,\text{min}}\} \quad \text{and} \quad T_{\text{max}} = \min_n\{T_{n,\text{max}}\}`}</p>
+<p>${tex.block`T_{\text{min}} = \max_n{T_{n,\text{min}}} \quad \text{and} \quad T_{\text{max}} = \min_n{T_{n,\text{max}}}`}</p>
 
 <p>The final temperature estimate is the midpoint of these bounds:</p>
 
@@ -281,9 +374,11 @@ const eps2_max = view(Inputs.range([0.8, 1.0], {
 
 <p>${tex.block`\varepsilon_{n,\text{refined,min}} = \frac{F_n}{B_n(T_{\text{max}})} \quad \text{and} \quad \varepsilon_{n,\text{refined,max}} = \frac{F_n}{B_n(T_{\text{min}})}`}</p>
 
+
 <p>The emissivity estimate is taken at the midpoint temperature:</p>
 
 <p>${tex.block`\hat{\varepsilon}_n = \frac{F_n}{B_n(\hat{T})}`}</p>
+
 
 <h3 style="margin:2rem 0 1rem">Application: Utah Lake Water Analysis</h3>
 
@@ -292,7 +387,7 @@ const eps2_max = view(Inputs.range([0.8, 1.0], {
 <div class="alg-figure">
 
 ```js
-{
+(async () => {
   const temps_bounds = Array.from({length: 100}, () => 276 + Math.random() * 4);
   const temps_brightness = Array.from({length: 100}, () => 275 + Math.random() * 5);
 
@@ -301,7 +396,7 @@ const eps2_max = view(Inputs.range([0.8, 1.0], {
     ...temps_brightness.map(T => ({T, method: "Brightness Temp"}))
   ];
 
-  return Plot.plot({
+  const plot = Plot.plot({
     width: 640,
     height: 400,
     marginLeft: 72,
@@ -319,7 +414,9 @@ const eps2_max = view(Inputs.range([0.8, 1.0], {
       }))
     ]
   });
-}
+  
+  return plot;
+})()
 ```
 
 </div>
@@ -330,7 +427,7 @@ const eps2_max = view(Inputs.range([0.8, 1.0], {
   <h4 style="margin-top: 0; margin-bottom: 1rem; font-family: var(--sans-serif);">Key Results</h4>
   <ul style="margin: 0.5rem 0 0 1.5rem;">
     <li style="margin: 0.35rem 0;"><strong>Temperature accuracy</strong>: ±0.5°C average error</li>
-    <li style="margin: 0.35rem 0;"><strong>Emissivity accuracy</strong>: ±0.0092 average error</li>
+    <li style="margin: 0.35rem 0;"><strong>Emissivity accuracy</strong>: ±0.01 average error</li>
     <li style="margin: 0.35rem 0;">No assumed constant emissivity across channels</li>
     <li style="margin: 0.35rem 0;">No iterative optimization required</li>
     <li style="margin: 0.35rem 0;">Computationally efficient for large datasets</li>
@@ -366,6 +463,3 @@ const eps2_max = view(Inputs.range([0.8, 1.0], {
 </section>
 
 </div>
-
-
-corrige esse codigo ese esta bien pero los plits me dice como SyntaxError: 'return' outside of function (23:2)
