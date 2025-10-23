@@ -273,6 +273,8 @@ toc: false
   document.getElementById("nem-scatter-interactive").append(chart);
 </script>
 
+<img src="algorithms/assets/nempaper.png" alt="Paper original" width="500">
+
 <h2 style="margin-top:2rem;">References</h2>
 
 <div style="border: 2px solid #ccc; padding: 1rem 1.2rem; background-color: #f9f9f9; border-radius: 8px; width: 80%; margin-bottom: 2rem;">
@@ -283,7 +285,7 @@ toc: false
   </ul>
 </div>
 
-<img src="algorithms/assets/NEM.png" alt="Paper original" width="500">
+
 
   
 
