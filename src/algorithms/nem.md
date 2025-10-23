@@ -20,14 +20,7 @@ toc: false
     <div><strong>Date</strong>: 1985</div>
   </section>
 
-
-
-
   <section class="alg-section alg-narrow">
-
-
-
-    
     <p style="margin-bottom:1rem;">
   The Normalized Emissivity Method (NEM) is used to estimate land surface temperature and spectral emissivity from thermal imagery, particularly in cases where prior knowledge of material emissivity is unavailable. This method enables reliable retrievals of surface temperature and emissivity even when only a limited number of thermal bands are available.
 </p>
@@ -168,6 +161,11 @@ toc: false
   temperature–emissivity separation (TES) techniques to improve accuracy.
 </p>
 
+<p>
+As an example, Figure B-6—taken from the original publication—illustrates the performance of the NEM algorithm in retrieving vegetation emissivity spectra with high accuracy and consistent spectral shape.
+</p>
+
+<img src="assets/nempaper.png" alt="Paper original" width="1000">
 
 <h3 style="margin-top:1rem;">Advantages</h3>
 <ul>
@@ -279,11 +277,6 @@ toc: false
 
   document.getElementById("nem-scatter-interactive").append(chart);
 </script>
-
-
-
-
-<img src="assets/nempaper.png" alt="Paper original" width="500">
 
 
 
