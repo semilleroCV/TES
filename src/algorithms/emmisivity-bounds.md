@@ -384,42 +384,6 @@ const data2 = eps_range.map(eps => ({eps, T: getTemp(F2, eps, channels[1])}));
 
 <p>The method was validated using TIMS data from Utah Lake (April 1991). For water pixels with initial emissivity bounds of 0.97–1.00 across all six channels:</p>
 
-<div class="alg-figure">
-
-```js
-(async () => {
-  const temps_bounds = Array.from({length: 100}, () => 276 + Math.random() * 4);
-  const temps_brightness = Array.from({length: 100}, () => 275 + Math.random() * 5);
-
-  const data = [
-    ...temps_bounds.map(T => ({T, method: "Bounds Method"})),
-    ...temps_brightness.map(T => ({T, method: "Brightness Temp"}))
-  ];
-
-  const plot = Plot.plot({
-    width: 640,
-    height: 400,
-    marginLeft: 72,
-    marginBottom: 44,
-    grid: true,
-    x: {label: "Temperature (K)"},
-    y: {label: "Frequency"},
-    color: {legend: true},
-    marks: [
-      Plot.rectY(data, Plot.binX({y: "count"}, {
-        x: "T",
-        fill: "method",
-        mixBlendMode: "multiply",
-        thresholds: 20
-      }))
-    ]
-  });
-  
-  return plot;
-})()
-```
-
-</div>
 
 <p style="text-align:center;color:var(--theme-foreground-muted);margin:0.35rem 0 1.5rem">Temperature distribution from bounds method vs brightness temperature (simulated).</p>
 
