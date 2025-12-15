@@ -217,29 +217,33 @@ toc: false
   const epsMin = 0.30, epsMax = 1.00;   // rango de emisividad de los sliders
 
 
-  // Conversion factor → microflicks (μf)
-  // 1 W/m²·sr·μm = 10^6 μf
-  const toMicroflicks = (L_SI) => L_SI * 1e6;
+  // 1 µf = 1 µW / (cm²·sr·µm) = 0.01 W/(m²·sr·µm)
+  // => 1 W/(m²·sr·µm) = 100 µf
+  const toMicroflicks = (L_W_m2_sr_um) => L_W_m2_sr_um * 100;
+  const fromMicroflicks = (L_μf) => L_μf / 100;
+
 
   // --- Helpers ---
-  function planckRadiance_SI(T, λ) {
-    const expo = (h * c) / (λ * k * T);
-    return (c1 / Math.pow(λ, 5)) / (Math.exp(expo) - 1);
+  function planckRadiance_W_m2_sr_um(T, λ_m) {
+  const expo = (h * c) / (λ_m * k * T);
+  const B_per_m = (c1 / Math.pow(λ_m, 5)) / (Math.exp(expo) - 1); // W/m²·sr·m
+  return B_per_m * 1e-6; // -> W/m²·sr·µm
   }
 
-  function Tb_from_Lμf(L_μf, λ) {
-    // Convert back from μf to W/m²·sr·μm
-    const L_SI = L_μf / 1e6;
-    const λ5 = Math.pow(λ, 5);
-    const lnTerm = Math.log(1 + c1 / (λ5 * L_SI));
-    return c2 / (λ * lnTerm);
+
+  function Tb_from_Lμf(L_μf, λ_m) {
+  const L_um = fromMicroflicks(L_μf); // W/m²·sr·µm
+  const L_m  = L_um * 1e6;            // W/m²·sr·m  (para usar con c1/λ^5)
+  const lnTerm = Math.log(1 + c1 / (Math.pow(λ_m, 5) * L_m));
+  return c2 / (λ_m * lnTerm);
   }
+
 
   // --- Data ---
   function buildCurve() {
   // radiancias mínima y máxima que pueden aparecer (Tmin, epsMin) y (Tmax, epsMax)
-  const Lmin = planckRadiance_SI(Tmin, lambda_m) * epsMin;
-  const Lmax = planckRadiance_SI(Tmax, lambda_m) * epsMax * 1.05;
+  const Lmin = planckRadiance_W_m2_sr_um(Tmin, lambda_m) * epsMin;
+  const Lmax = planckRadiance_W_m2_sr_um(Tmax, lambda_m) * epsMax * 1.05;
 
   const data = [];
   for (let i = 0; i < samples; i++) {
@@ -254,7 +258,7 @@ toc: false
 
 
   function marker(T, eps) {
-    const L_SI = eps * planckRadiance_SI(T, lambda_m);
+    const L_SI = eps * planckRadiance_W_m2_sr_um(T, lambda_m);
     const L_μf = toMicroflicks(L_SI);
     const Tb = Tb_from_Lμf(L_μf, lambda_m);
     return { L_μf, Tb, T, eps };
@@ -288,8 +292,8 @@ function renderPlot(T, eps) {
   const m = marker(T, eps);
 
   // límites X (en μf) y formato
-  const Lmin = toMicroflicks(planckRadiance_SI(Tmin, lambda_m) * epsMin);
-  const Lmax = toMicroflicks(planckRadiance_SI(Tmax, lambda_m) * epsMax * 1.05);
+  const Lmin = toMicroflicks(planckRadiance_W_m2_sr_um(Tmin, lambda_m) * epsMin);
+  const Lmax = toMicroflicks(planckRadiance_W_m2_sr_um(Tmax, lambda_m) * epsMax * 1.05);
 
 
   const chart = Plot.plot({
@@ -300,7 +304,7 @@ function renderPlot(T, eps) {
       label: "Measured Radiance L (μf)",
       domain: [Lmin, Lmax],
       grid: true,
-      tickFormat: d => d.toExponential(1) // mantiene legible sin saturar
+      tickFormat: d => d.toFixed(0)  // mantiene legible sin saturar
     },
     y: { 
       label: "Brightness Temperature T_b (K)", 
@@ -815,6 +819,21 @@ As an example, Figure B-6—taken from the original publication—illustrates th
     
   </ul>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
 
 
