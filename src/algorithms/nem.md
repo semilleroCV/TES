@@ -417,7 +417,7 @@ function renderPlot(T, eps) {
 As an example, Figure B-6—taken from the original publication—illustrates the performance of the NEM algorithm in retrieving vegetation emissivity spectra with high accuracy and consistent spectral shape.
 </p>
 
-<img src="assets/NEM.png" alt="Paper original" width="1000">
+<img src="assets/nempaper.png" alt="Paper original" width="1000">
 
 <h3 style="margin-top:1.2rem;">Iterative NEM and smoothness prior</h3>
 
