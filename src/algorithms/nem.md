@@ -21,140 +21,392 @@ toc: false
   </section>
 
   <section class="alg-section alg-narrow">
-    <p style="margin-bottom:1rem;">
-  The Normalized Emissivity Method (NEM) is used to estimate land surface temperature and spectral emissivity from thermal imagery, particularly in cases where prior knowledge of material emissivity is unavailable. This method enables reliable retrievals of surface temperature and emissivity even when only a limited number of thermal bands are available.
+  
+
+<p style="margin-top:0.8rem;">
+  In NEM, the pixel with the <strong>maximum radiance</strong> is assumed to have the
+  <strong>maximum emissivity</strong> \(\varepsilon_{\max}\).
+  This value is not taken as 1.0 in practice: real surfaces are not perfect blackbodies.
+  
 </p>
 
-<p style="margin-bottom:1rem;">
-  The approach is based on the assumption that within the set of thermal bands, at least one band exhibits the maximum emissivity (<strong>ε<sub>max</sub></strong>).
+<p style="margin-top:0.6rem;">
+  For example, in ASTER assumes 
+  \(\varepsilon_{\max} \approx 0.99\), which reflects the fact that most natural
+  surfaces (vegetation, water, moist soil) exhibit emissivities between 0.97 and 0.995
+  in the 8–12&nbsp;µm thermal region.
+</p>
+
+<p style="margin-top:0.6rem;">
+  When NEM is applied to other thermal sensors, similar values are used.
+  For MODIS, published TES studies typically assume 
+  \(\varepsilon_{\max} = 0.97\text{–}0.99\).
+  For Landsat TIR, implementations generally adopt 
+  \(\varepsilon_{\max} = 0.985\text{–}0.99\).
+</p>
+
+
+
+
+
+
   From this reference band, the <strong>brightness temperature</strong> is estimated using the inverse of Planck’s law, which serves as the basis for deriving the kinetic temperature and emissivity of the remaining pixels.
 </p>
+  
 
   </br>
 
   
-
-
   <h3 style="margin:1rem 0 0.5rem">Brightness Temperature</h3>
   <p>
-  The brightness temperature (<strong>T<sub>b</sub></strong>) can be derived from the
-  measured spectral radiance (<strong>L<sub>λ</sub></strong>) using the inverse of Planck’s law:
-  </p>
-  
-  <p style="text-align:center; color:#555; margin-top:0;">
-  \( T_b = \dfrac{c_2}{\lambda \,\ln\!\left(1 + \dfrac{c_1}{\lambda^5 L_\lambda}\right)} \), 
+
+<p>
+  The <strong>brightness temperature</strong> (<strong>T<sub>b</sub></strong>) is obtained by
+  inverting Planck’s law using the measured spectral radiance (<strong>L<sub>λ</sub></strong>).
+</p>
+
+<!-- Planck's Law  -->
+<p style="margin-top:0.6rem;">
+  <strong>Planck’s law:</strong>
+</p>
+<p style="margin:0.35rem 0;">
+  \[
+    B_\lambda(T) \;=\; \frac{2hc^2}{\lambda^5}\,\frac{1}{\exp\!\Big(\frac{hc}{\lambda k T}\Big)-1}
+    \;=\; \frac{c_1}{\lambda^5}\,\frac{1}{\exp\!\Big(\frac{c_2}{\lambda T}\Big)-1},
+  \]
+</p>
+<p style="text-align:center;  margin-top:0;">
   where \(c_1 = 2hc^2\) and \(c_2 = \dfrac{hc}{k}\).
-  </p>
+</p>
+
+<!-- Definition of Tb -->
+<p style="margin-top:0.8rem;">
+  By definition, the brightness temperature \(T_b\) satisfies \(L_\lambda = B_\lambda(T_b)\). Substituting:
+</p>
+<p style="margin:0.35rem 0;">
+  \[
+    L_\lambda \;=\; \frac{c_1}{\lambda^5}\,\frac{1}{\exp\!\Big(\frac{c_2}{\lambda T_b}\Big)-1}.
+  \]
+</p>
+
+<!-- Step-by-step derivation -->
+<p style="margin-top:0.8rem;"><strong>Step-by-step derivation:</strong></p>
+
+<ol style="padding-left:1.2rem; font-size:0.95rem;">
+  <li style="margin:0.35rem 0;">
+    Multiply both sides by the denominator:
+    \[
+      L_\lambda\Big(\exp\!\Big(\frac{c_2}{\lambda T_b}\Big)-1\Big) \;=\; \frac{c_1}{\lambda^5}.
+    \]
+  </li>
+  <li style="margin:0.35rem 0;">
+    Divide by \(L_\lambda\):
+    \[
+      \exp\!\Big(\frac{c_2}{\lambda T_b}\Big) - 1 \;=\; \frac{c_1}{\lambda^5 L_\lambda}.
+    \]
+  </li>
+  <li style="margin:0.35rem 0;">
+    Add 1 to both sides:
+    \[
+      \exp\!\Big(\frac{c_2}{\lambda T_b}\Big) \;=\; 1 + \frac{c_1}{\lambda^5 L_\lambda}.
+    \]
+  </li>
+  <li style="margin:0.35rem 0;">
+    Take the natural logarithm:
+    \[
+      \frac{c_2}{\lambda T_b} \;=\; \ln\!\Bigg(1 + \frac{c_1}{\lambda^5 L_\lambda}\Bigg).
+    \]
+  </li>
+  <li style="margin:0.35rem 0;">
+    Solve for \(T_b\):
+    <div style="text-align:center; margin-top:0.35rem;font-size:1.2rem;">
+      \[
+        \boxed{
+          T_b \;=\; \frac{c_2}{\lambda \,\ln\!\left(1 + \dfrac{c_1}{\lambda^5 L_\lambda}\right)}
+        }
+      \]
+    </div>
+  </li>
+</ol>
+
+<p style="margin-top:0.8rem;">
+  Equation (5) above gives the <strong>standard brightness temperature</strong> \(T_b\) associated
+  with a measured radiance \(L_\lambda\), assuming a unit emissivity (ideal blackbody).
+  In the ASTER–TES implementation of NEM, the same inversion of Planck’s law is applied not
+  to the raw radiance, but to the atmosphere-corrected “object” radiance scaled by the assumed
+  maximum emissivity \(\varepsilon_{\max}\). Denoting this radiance by \(L_{\text{obj}}(\lambda)\),
+  the NEM temperature is:
+</p>
+
+<p style="text-align:center; font-size:1.05rem; margin:0.5rem 0 0.9rem 0;">
+  \[
+    T'(\lambda)
+    \;=\;
+    \frac{c_2}{
+      \lambda \,\ln\!\left(
+        1 + \dfrac{c_1\,\varepsilon_{\max}}{\lambda^5 L_{\text{obj}}(\lambda)}
+      \right)
+    }.
+  \]
+</p>
+
+<p style="margin-top:0.2rem;">
+  Thus, \(T'(\lambda)\) is closely related to the brightness temperature, but it is not identical:
+  the emissivity appears explicitly through \(\varepsilon_{\max}\), because NEM assumes that the
+  brightest pixel in the scene behaves like a quasi-blackbody with emissivity \(\varepsilon_{\max}\),
+  and rescales the radiance accordingly before applying the Planck inversion.
+</p>
 
 
+<p style="margin-top:0.8rem;">
+  The interactive figure below illustrates the nonlinear relationship between
+  the measured spectral radiance \(L_\lambda\) and the brightness temperature
+  \(T_b\) at a wavelength of 10&nbsp;µm. The black point marks the combination
+  of <strong>surface temperature</strong> and <strong>emissivity</strong> selected
+  with the sliders.
+</p>
    
   
 
-  <!-- Contenedor donde irá el gráfico -->
-  <div id="nem-plot" class="alg-figure bleed" style="margin-top:1rem;">
-  </div>
+<!-- Contenedor donde irá el gráfico -->
+<div id="nem-plot" class="alg-figure bleed" style="margin-top:1rem;"></div>
 
-  <!-- Controles interactivos -->
-  <div style="margin-top:2rem; text-align:center;">
-    <label for="tempRange" style="font-weight:600; font-size:0.95rem;">Surface Temperature (K):</label><br>
-    <input 
-      type="range" 
-      id="tempRange" 
-      min="300" 
-      max="2000" 
-      value="300" 
-      step="1"
+
+<!-- Controles interactivos -->
+<div style="margin-top:2rem; text-align:center;">
+  <label for="tempRange" style="font-weight:600; font-size:0.95rem;">Surface Temperature (K):</label><br>
+  <input 
+  type="range" 
+  id="tempRange" 
+  min="270" 
+  max="320" 
+  value="300" 
+  step="1"
+  style="width:350px; accent-color:#ff0000; vertical-align:middle;">
+  <div id="tempValue" style="font-weight:700; font-size:1rem; margin-top:0.4rem;">300 K</div>
+
+
+  <div style="margin-top:1rem;">
+    <label for="epsRange" style="font-weight:600; font-size:0.95rem;">Emissivity (ε):</label><br>
+    <input
+      type="range"
+      id="epsRange"
+      min="0.30"
+      max="1.00"
+      value="0.95"
+      step="0.01"
       style="width:350px; accent-color:#ff0000; vertical-align:middle;">
-    <div id="tempValue" style="font-weight:700; font-size:1rem; margin-top:0.4rem;">300 K</div>
+    <div id="epsValue" style="font-weight:700; font-size:1rem; margin-top:0.4rem;">ε = 0.95</div>
   </div>
+</div>
 
-  <script type="module">
-    import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
+<script type="module">
+  import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
 
-    // --- Constantes físicas ---
-    const c = 299792458;       // m/s
-    const h = 6.62607015e-34;  // J·s
-    const k = 1.380649e-23;    // J/K
+  // --- Physical constants (SI) ---
+  const c = 299792458;       // m/s
+  const h = 6.62607015e-34;  // J·s
+  const k = 1.380649e-23;    // J/K
+  const c1 = 2 * h * c * c;  // 2hc^2
+  const c2 = (h * c) / k;    // hc/k
 
-    // --- Parámetros base ---
-    const lambda_um = 10;      // µm
-    const lambda_m = lambda_um * 1e-6;
-    const samples = 200;
+ const lambda_um = 10;
+  const lambda_m = lambda_um * 1e-6;
+  const samples = 300;
+  const Tmin = 270, Tmax = 320;
+  const epsMin = 0.30, epsMax = 1.00;   // rango de emisividad de los sliders
 
-    // --- Función Tb(eps) ---
-    function brightnessTemp(eps, T, lambda_m) {
-      const exponent = (h * c) / (lambda_m * k * T);
-      return (h * c) / (lambda_m * k * Math.log(1 + (Math.exp(exponent) - 1) / eps));
-    }
 
-    // --- Generar datos ---
-    function generateData(T) {
-      return Array.from({ length: samples }, (_, i) => {
-        const eps = 0.3 + 0.7 * (i / (samples - 1));
-        return { epsilon: eps, Tb: brightnessTemp(eps, T, lambda_m) };
-      });
-    }
+  // 1 µf = 1 µW / (cm²·sr·µm) = 0.01 W/(m²·sr·µm)
+  // => 1 W/(m²·sr·µm) = 100 µf
+  const toMicroflicks = (L_W_m2_sr_um) => L_W_m2_sr_um * 100;
+  const fromMicroflicks = (L_μf) => L_μf / 100;
 
-    // --- Dibujar gráfico ---
-    function renderPlot(T) {
-      const data = generateData(T);
 
-      const chart = Plot.plot({
-        height: 350,
-        marginLeft: 70,
-        marginBottom: 45,
-        x: { label: "Emissivity (ε)", domain: [0.3, 1.0] },
-        y: { label: "Brightness Temperature (K)", grid: true },
-        marks: [
-          Plot.line(data, { x: "epsilon", y: "Tb", stroke: "#f30606ff", strokeWidth: 2 }),
-          Plot.ruleY([T], { stroke: "#666", strokeDasharray: "4 4" }),
-          Plot.text(
-            [{ epsilon: 0.95, Tb: T, label: `Tₛ = ${T} K` }],
-            { x: "epsilon", y: "Tb", text: "label", fontSize: 12, dy: -6, fill: "#333" }
-          )
-        ]
-      });
+  // --- Helpers ---
+  function planckRadiance_W_m2_sr_um(T, λ_m) {
+  const expo = (h * c) / (λ_m * k * T);
+  const B_per_m = (c1 / Math.pow(λ_m, 5)) / (Math.exp(expo) - 1); // W/m²·sr·m
+  return B_per_m * 1e-6; // -> W/m²·sr·µm
+  }
 
-      const div = document.getElementById("nem-plot");
-      div.innerHTML = "";
-      div.append(chart);
-    }
 
-    // --- Interactividad ---
-    const tempSlider = document.getElementById("tempRange");
-    const tempValue = document.getElementById("tempValue");
+  function Tb_from_Lμf(L_μf, λ_m) {
+  const L_um = fromMicroflicks(L_μf); // W/m²·sr·µm
+  const L_m  = L_um * 1e6;            // W/m²·sr·m  (para usar con c1/λ^5)
+  const lnTerm = Math.log(1 + c1 / (Math.pow(λ_m, 5) * L_m));
+  return c2 / (λ_m * lnTerm);
+  }
 
-    function updatePlot() {
-      const T = parseInt(tempSlider.value);
-      tempValue.textContent = `${T} K`;
-      renderPlot(T);
-    }
 
-    tempSlider.addEventListener("input", updatePlot);
-    updatePlot(); // inicializa
-  </script>
+  // --- Data ---
+  function buildCurve() {
+  // radiancias mínima y máxima que pueden aparecer (Tmin, epsMin) y (Tmax, epsMax)
+  const Lmin = planckRadiance_W_m2_sr_um(Tmin, lambda_m) * epsMin;
+  const Lmax = planckRadiance_W_m2_sr_um(Tmax, lambda_m) * epsMax * 1.05;
+
+  const data = [];
+  for (let i = 0; i < samples; i++) {
+    const t = i / (samples - 1);
+    const L_SI = Lmin * Math.pow(Lmax / Lmin, t);  // muestreo log
+    const L_μf = toMicroflicks(L_SI);
+    const Tb = Tb_from_Lμf(L_μf, lambda_m);
+    data.push({ L_μf, Tb });
+  }
+  return data;
+}
+
+
+  function marker(T, eps) {
+    const L_SI = eps * planckRadiance_W_m2_sr_um(T, lambda_m);
+    const L_μf = toMicroflicks(L_SI);
+    const Tb = Tb_from_Lμf(L_μf, lambda_m);
+    return { L_μf, Tb, T, eps };
+  }
+
+  // --- Tooltip HTML element ---
+  const tooltip = document.createElement("div");
+  tooltip.style.position = "absolute";
+  tooltip.style.pointerEvents = "none";
+  tooltip.style.padding = "6px 8px";
+  tooltip.style.background = "rgba(0,0,0,0.75)";
+  tooltip.style.color = "#fff";
+  tooltip.style.borderRadius = "6px";
+  tooltip.style.fontSize = "0.85rem";
+  tooltip.style.display = "none";
+  tooltip.style.zIndex = "1000";
+  document.body.appendChild(tooltip);
+
+  // --- Draw plot ---
+  function decadeTicks(min, max) {
+  const e0 = Math.floor(Math.log10(min));
+  const e1 = Math.ceil(Math.log10(max));
+  const ticks = [];
+  for (let e = e0; e <= e1; e++) ticks.push(10 ** e);
+  return ticks;
+}
+
+// --- Draw plot (pretty x-axis in μf) ---
+function renderPlot(T, eps) {
+  const data = buildCurve();
+  const m = marker(T, eps);
+
+  // límites X (en μf) y formato
+  const Lmin = toMicroflicks(planckRadiance_W_m2_sr_um(Tmin, lambda_m) * epsMin);
+  const Lmax = toMicroflicks(planckRadiance_W_m2_sr_um(Tmax, lambda_m) * epsMax * 1.05);
+
+
+  const chart = Plot.plot({
+    height: 350,
+    marginLeft: 70,
+    marginBottom: 54,
+    x: {
+      label: "Measured Radiance L (μf)",
+      domain: [Lmin, Lmax],
+      grid: true,
+      tickFormat: d => d.toFixed(0)  // mantiene legible sin saturar
+    },
+    y: { 
+      label: "Brightness Temperature T_b (K)", 
+      domain: [200, 340],
+      grid: true 
+    },
+    marks: [
+      Plot.line(data, { x: "L_μf", y: "Tb", stroke: "#f30606ff", strokeWidth: 2 }),
+      Plot.ruleX([m.L_μf], { stroke: "#888", strokeDasharray: "4 4" }),
+      Plot.ruleY([m.Tb],   { stroke: "#888", strokeDasharray: "4 4" }),
+      Plot.dot([m],        { x: "L_μf", y: "Tb", r: 6, fill: "#000", opacity: 0.9 })
+    ]
+  });
+
+  const div = document.getElementById("nem-plot");
+  div.innerHTML = "";
+  div.append(chart);
+
+  // === Tooltips sobre el punto ===
+  const dot = div.querySelector("circle");
+  if (dot) {
+    dot.addEventListener("mouseenter", () => {
+      tooltip.style.display = "block";
+      tooltip.textContent =
+        `ε = ${eps.toFixed(2)} | ` +
+        `Tₛ = ${T} K | ` +
+        `L = ${m.L_μf.toExponential(2)} μf | ` +
+        `T_b = ${m.Tb.toFixed(2)} K`;
+    });
+    dot.addEventListener("mousemove", (e) => {
+      tooltip.style.left = (e.pageX + 12) + "px";
+      tooltip.style.top  = (e.pageY - 10) + "px";
+    });
+    dot.addEventListener("mouseleave", () => {
+      tooltip.style.display = "none";
+    });
+  }
+
+  // Oculta el tooltip si el cursor sale del área del gráfico
+  chart.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none";
+  });
+}
+
+
+
+  // --- Sliders ---
+  const tempSlider = document.getElementById("tempRange");
+  const epsSlider = document.getElementById("epsRange");
+  const tempValue = document.getElementById("tempValue");
+  const epsValue = document.getElementById("epsValue");
+
+  function updatePlot() {
+    const T = parseInt(tempSlider.value, 10);
+    const eps = parseFloat(epsSlider.value);
+    tempValue.textContent = `${T} K`;
+    epsValue.textContent = `ε = ${eps.toFixed(2)}`;
+    renderPlot(T, eps);
+  }
+
+  tempSlider.addEventListener("input", updatePlot);
+  epsSlider.addEventListener("input", updatePlot);
+  updatePlot();
+</script>
+
+<p style="margin-top:0.4rem;">
+  In practical implementations, the NEM temperature is often defined as the
+  maximum brightness temperature over all pixels (or bands) in the scene:
+</p>
+
+<p style="text-align:center; font-size:1.1rem; margin:0.3rem 0 0.8rem 0;">
+  \[
+    T_{\text{nem}} \;=\; \text{max}_{i}   T_{b,i}
+  \]
+</p>
+
+<p style="margin-top:0.2rem;">
+  where \(T_{b,i}\) is the brightness temperature retrieved for each pixel or band
+  from the measured radiance using the inverse of Planck’s law.
+</p>
   
   <p style="margin-top:1rem;">
-  Once the kinetic temperature (<strong>T<sub>k</sub></strong>) has been identified as the highest
+  Once the NEM temperature (<strong>T<sub>nem</sub></strong>) has been identified as the highest
   brightness temperature, the next step is to estimate the spectral emissivity
   (<strong>ε<sub>i</sub></strong>) for each band or pixel.
   Using the measured spectral radiance (<strong>L<sub>i</sub></strong>), the emissivity can be derived
-  from Planck’s radiance function at the kinetic temperature as:
+  from Planck’s radiance function at the NEM temperature as:
 </p>
 
 <p style="text-align:center; font-size:1.05rem; margin-top:0.6rem;">
   \[
-    \varepsilon_i = \frac{L_i}{B(\lambda, T_k)}
+    \varepsilon_i = \frac{L_i}{B(\lambda, T_{nem})}
   \]
 </p>
 
 <p style="margin-top:0.6rem;">
-  Here, \(B(\lambda, T_k)\) represents the blackbody spectral radiance computed from Planck’s law
-  for the wavelength \( \lambda \) and kinetic temperature \( T_k \).
+  Here, \(B(\lambda, T_{nem})\) represents the blackbody spectral radiance computed from Planck’s law
+  for the wavelength \( \lambda \) and NEM temperature \( T_{nem}\).
   This normalization step ensures that emissivity values remain consistent across all thermal bands.
 </p>
 <p style="margin-top:1rem;">
-  With both the kinetic temperature (<strong>T<sub>k</sub></strong>) and the emissivity values
+  With both the NEM temperature (<strong>T<sub>nem</sub></strong>) and the emissivity values
   (<strong>ε<sub>i</sub></strong>) estimated, the NEM method allows the retrieval of a
   consistent temperature–emissivity set for each pixel in the scene.
   These results can then be refined iteratively or compared with other
@@ -165,7 +417,115 @@ toc: false
 As an example, Figure B-6—taken from the original publication—illustrates the performance of the NEM algorithm in retrieving vegetation emissivity spectra with high accuracy and consistent spectral shape.
 </p>
 
-<img src="assets/nempaper.png" alt="Paper original" width="1000">
+<img src="assets/NEM.png" alt="Paper original" width="1000">
+
+<h3 style="margin-top:1.2rem;">Iterative NEM and smoothness prior</h3>
+
+<p style="margin-top:0.4rem;">
+  In its simplest form, NEM performs a single normalization step. However, it can
+  also be used <strong>iteratively</strong>: starting from an initial guess for
+  \(\varepsilon_{\max}\) (for example 0.99), one computes \(T_{\text{nem}}\) and a
+  first set of emissivities \(\varepsilon_i^{(0)}\). A smoothness metric of the
+  emissivity spectrum (such as the spectral variance or curvature across bands)
+  is then evaluated, and \(\varepsilon_{\max}\) is adjusted until this metric is
+  minimized.
+</p>
+
+<p style="margin-top:0.4rem;">
+  The underlying assumption is that physically realistic emissivity spectra are
+  <strong>smooth</strong> in wavelength, without strong oscillations from band to
+  band. The preferred solution is therefore the one that produces the smoothest
+  emissivity spectrum while remaining consistent with the measured radiances.
+</p>
+
+<p style="margin-top:0.4rem;">
+  A simple smoothness metric often used in TES methods is the spectral variance
+  of emissitivity:
+</p>
+
+<p style="text-align:center; font-size:1.05rem; margin:0.4rem 0;">
+  \[
+    \mathrm{Var}(\varepsilon) \;=\; 
+    \frac{1}{N}\sum_{i=1}^{N}\big(\varepsilon_i - \bar{\varepsilon}\big)^2
+  \]
+</p>
+
+<p style="margin-top:0.4rem;"> The plot below shows a synthetic example of how the emissivity variance changes with the assumed value of \(\varepsilon_{\max}\). In this illustrative case, the variance reaches its minimum near \(\varepsilon_{\max} = 0.99\), which aligns with typical assumptions used in TES algorithms. </p>
+
+<div id="nem-variance-plot" class="alg-figure" style="margin-top:0.8rem;"></div>
+
+<script type="module">
+  import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
+
+  // Generate a smooth upward-opening parabola
+  const epsMin = 0.98;
+  const epsMax = 1.00;
+  const N = 40;
+
+  // True minimum at eps = 0.99
+  function varianceModel(e) {
+    return 50 * Math.pow(e - 0.99, 2) + 0.002;  // Clean parabola
+  }
+
+  const varianceData = Array.from({ length: N }, (_, i) => {
+    const e = epsMin + (epsMax - epsMin) * (i / (N - 1));
+    return { epsMax: e, var: varianceModel(e) };
+  });
+
+  const varianceChart = Plot.plot({
+    height: 260,
+    marginLeft: 75,
+    marginBottom: 48,
+    x: {
+      label: "Assumed ε_max",
+      domain: [0.98, 1.00],
+      ticks: [0.98, 0.99, 1.00],
+      tickFormat: d => d.toFixed(2)
+    },
+    y: {
+      label: "Spectral variance of ε",
+      grid: true
+    },
+    marks: [
+      Plot.line(varianceData, {
+        x: "epsMax",
+        y: "var",
+        stroke: "#d62728",
+        strokeWidth: 2.5
+      }),
+      Plot.dot(varianceData, {
+        x: "epsMax",
+        y: "var",
+        r: 3,
+        fill: "#d62728"
+      }),
+      // Vertical line at the minimum
+      Plot.ruleX([0.99], {
+        stroke: "#444",
+        strokeDasharray: "4 4"
+      }),
+      // Label at the minimum
+      Plot.text(
+        [{ epsMax: 0.99, var: varianceModel(0.99), label: "minimum at 0.99" }],
+        {
+          x: "epsMax",
+          y: "var",
+          text: "label",
+          dy: -10,
+          dx: 4,
+          fontSize: 12,
+          fill: "#111",
+          fontWeight: 600
+        }
+      )
+    ]
+  });
+
+  const varDiv = document.getElementById("nem-variance-plot");
+  varDiv.innerHTML = "";
+  varDiv.append(varianceChart);
+</script>
+
 
 <h3 style="margin-top:1rem;">Advantages</h3>
 <ul>
@@ -183,100 +543,270 @@ As an example, Figure B-6—taken from the original publication—illustrates th
   <li>Provides an approximate estimation rather than an absolute emissivity value.</li>
 </ul>
 
-
 <h3 style="margin-top:2rem;">Illustrative Application</h3>
 
 <p>
-  Consider a small set of 5 pixels with measured radiances (<strong>L</strong>) at a wavelength of 10 μm:
+  To demonstrate how the Normalized Emissivity Method (NEM) works, consider a small
+  synthetic example consisting of radiance measurements at 10&nbsp;µm for five pixels.
+  Radiances are expressed directly in <strong>microflicks (µf)</strong>.  
+  These numbers are invented for illustration but preserve the internal behavior of NEM.
 </p>
 
-<table style="width:50%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.95rem;">
-  <thead>
-    <tr style="background-color:#f3f4f6;">
-      <th style="border: 1px solid #ccc; padding: 6px 10px; text-align:center;">Pixel</th>
-      <th style="border: 1px solid #ccc; padding: 6px 10px; text-align:center;">L (W/(m²·sr·μm))</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">1</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">10</td></tr>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">2</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">12</td></tr>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">3</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">15</td></tr>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">4</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">14</td></tr>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">5</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">13</td></tr>
-  </tbody>
-</table>
+<div style="text-align:center; width:100%;">
+  <table style="
+      width:55%; 
+      border-collapse: collapse; 
+      margin-left:auto; 
+      margin-right:auto; 
+      font-size:0.95rem;"
+  >
+    <thead>
+      <tr style="background-color:#f3f4f6;">
+        <th style="border: 1px solid #ccc; padding: 6px; text-align:center;">Pixel</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align:center;">Radiance L (µf)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">1</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">10</td></tr>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">2</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">12</td></tr>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">3</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">15</td></tr>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">4</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">14</td></tr>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">5</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">13</td></tr>
+    </tbody>
+  </table>
+</div>
 
-<ol style="margin-top:0.6rem; padding-left:1.2rem; font-size:0.95rem;">
-  <li>The pixel with maximum radiance (Pixel 3) defines the kinetic temperature <strong>T<sub>k</sub></strong>. Using Planck’s law, suppose T<sub>k</sub> = 330 K.</li>
-  <li>Emissivities of the other pixels are calculated relative to this maximum:</li>
-</ol>
 
-<table style="width:50%; border-collapse: collapse; margin: 0.5rem 0 1rem 0; font-size: 0.95rem;">
-  <thead>
-    <tr style="background-color:#f3f4f6;">
-      <th style="border: 1px solid #ccc; padding: 6px 10px; text-align:center;">Pixel</th>
-      <th style="border: 1px solid #ccc; padding: 6px 10px; text-align:center;">ε</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">1</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">0.67</td></tr>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">2</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">0.80</td></tr>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">3</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">1.00</td></tr>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">4</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">0.93</td></tr>
-    <tr><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">5</td><td style="border: 1px solid #ccc; padding: 4px 8px; text-align:center;">0.87</td></tr>
-  </tbody>
-</table>
-
-<p style="font-size:0.95rem;">
-  This small example illustrates how NEM can retrieve both kinetic temperature and emissivity values using only thermal radiances, without prior knowledge of material properties.
+<p style="margin-top:0.8rem;">
+  In NEM, the pixel with the <strong>maximum radiance</strong> is assumed to have the
+  <strong>maximum emissivity</strong>:
 </p>
 
-<!-- Contenedor del gráfico -->
+<p style="text-align:center; font-size:1.1rem; margin:0.4rem 0;">
+  ε<sub>max</sub> = 0.99
+</p>
+
+<p>
+  In this example, Pixel 3 has the highest radiance (15&nbsp;µf), so it is used as the
+  reference pixel.  
+  Applying the inverse of Planck’s law to its radiance yields the so-called
+  <strong>NEM temperature</strong>:
+</p>
+
+<p style="text-align:center; font-size:1.15rem; margin:0.4rem 0;">
+  <strong>T<sub>nem</sub> ≈ 330&nbsp;K</strong>
+</p>
+
+<p>
+  Once T<sub>nem</sub> is known, the emissivity of each pixel follows from:
+</p>
+
+<p style="text-align:center; font-size:1.2rem; margin:0.5rem 0;">
+  \( \varepsilon_i = \dfrac{L_i}{B_\lambda(T_{nem})} \)
+</p>
+
+<p style="margin-top:0.5rem;">
+  Using the radiance values from the table, NEM produces the following emissivities:
+</p>
+
+<div style="text-align:center; width:100%; margin: 1.2rem 0;">
+  <table style="
+      width:55%;
+      border-collapse: collapse;
+      margin-left:auto;
+      margin-right:auto;
+      font-size:0.95rem;
+      margin-top:0.8rem;
+      margin-bottom:0.8rem;
+  ">
+    <thead>
+      <tr style="background-color:#f3f4f6;">
+        <th style="border: 1px solid #ccc; padding: 6px; text-align:center;">Pixel</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align:center;">Emissivity ε</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">1</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">0.67</td></tr>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">2</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">0.80</td></tr>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">3</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">0.99</td></tr>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">4</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">0.93</td></tr>
+      <tr><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">5</td><td style="border: 1px solid #ccc; padding: 6px; text-align:center;">0.87</td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<p style="margin-top:0.8rem;">
+  These results reflect the key behavior of NEM: emissivity differences arise naturally
+  by normalizing all radiances with respect to the reference pixel.
+  No a priori emissivity information is required.
+</p>
+
+<p style="margin-top:1.2rem;">
+  The following interactive figure illustrates how the <strong>apparent (brightness) temperature</strong> 
+  changes with the <strong>target temperature</strong> for different emissivity values.
+  The slider sets the value of \(T_s\), which determines the vertical marker on the x-axis.
+  For each selected \(T_s\), the same temperature is also used as the background term in the radiance model.
+  As a result, <strong>all emissivity curves intersect exactly at the dashed vertical line</strong>.
+</p>
+
+<p style="margin-top:0.6rem;">
+  This intersection is physically meaningful: when the background temperature equals the target temperature, 
+  the surface and the surroundings emit the same amount of radiation. Under this condition, the emitted 
+  radiance does not depend on emissivity, so all curves collapse to a single point. Away from the intersection, 
+  low-emissivity surfaces contribute less emitted radiation and more reflected background radiation, resulting in 
+  an apparent temperature that deviates from the 1:1 line.
+</p>
+
+
 <div id="nem-scatter-interactive" class="alg-figure" style="margin-top:1rem;"></div>
+
+<div style="margin-top:1rem; text-align:center;">
+  <label for="TsRange" style="font-weight:600; font-size:0.95rem;">
+    Target temperature \(T_s\) (K):
+  </label><br>
+
+  <input
+    type="range"
+    id="TsRange"
+    min="260"
+    max="340"
+    value="293"
+    step="1"
+    style="width:350px; accent-color:#ff0000;">
+  
+  <div id="TsValue" style="font-weight:700; font-size:1rem; margin-top:0.4rem;">
+    T<sub>s</sub> = 293 K
+  </div>
+</div>
 
 <script type="module">
   import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
 
-  // Datos base
-  const data = [
-    { pixel: 1, L: 10, eps: 0.67 },
-    { pixel: 2, L: 12, eps: 0.80 },
-    { pixel: 3, L: 15, eps: 1.00 },
-    { pixel: 4, L: 14, eps: 0.93 },
-    { pixel: 5, L: 13, eps: 0.87 },
-  ];
+  // Physical constants
+  const c  = 299792458;
+  const h  = 6.62607015e-34;
+  const k  = 1.380649e-23;
+  const c1 = 2 * h * c * c;
+  const c2 = (h * c) / k;
 
-  // Crear gráfico
-  const chart = Plot.plot({
-    height: 340,
-    marginLeft: 65,
-    marginBottom: 45,
-    x: { label: "Emissivity (ε)", domain: [0.6, 1.05] },
-    y: { label: "Radiance (W/(m²·sr·μm))", domain: [9, 16], grid: true },
-    marks: [
-      Plot.line(data, { x: "eps", y: "L", stroke: "#eb0808ff", strokeWidth: 2 }),
-      Plot.dot(data, { 
-        x: "eps", 
-        y: "L", 
-        r: 5, 
-        fill: "#f50b0bff", 
-        title: d => 
-          `Pixel: ${d.pixel}\nε: ${d.eps.toFixed(2)}\nL: ${d.L.toFixed(2)} W/(m²·sr·μm)`
-      }),
-      Plot.text(data, { 
-        x: "eps", 
-        y: "L", 
-        text: d => `${d.pixel}`, 
-        dy: -10, 
-        fill: "#111", 
-        fontSize: 12, 
-        fontWeight: 600 
-      })
-    ],
-  });
+  const lambda_um = 10;
+  const lambda_m  = lambda_um * 1e-6;
 
-  document.getElementById("nem-scatter-interactive").append(chart);
+  function B_lambda(T) {
+    const x = c2 / (lambda_m * T);
+    return (c1 / Math.pow(lambda_m, 5)) / (Math.exp(x) - 1);
+  }
+
+  function Tb_from_L(L) {
+    const lnTerm = Math.log(1 + c1 / (Math.pow(lambda_m, 5) * L));
+    return c2 / (lambda_m * lnTerm);
+  }
+
+  // Emissivity values
+  const epsList = [0.67, 0.80, 0.87, 0.93, 0.99];
+
+  // X axis range
+  const Ts_min = 250;
+  const Ts_max = 350;
+  const samples = 200;
+
+  // Curves Tb(Ts; eps, Tbg)
+  function buildCurves(Tbg) {
+    const curves = [];
+    for (const eps of epsList) {
+      for (let i = 0; i < samples; i++) {
+        const Ts = Ts_min + (Ts_max - Ts_min) * (i / (samples - 1));
+        const L  = eps * B_lambda(Ts) + (1 - eps) * B_lambda(Tbg);
+        const Tb = Tb_from_L(L);
+        curves.push({ Ts, Tb, eps });
+      }
+    }
+    return curves;
+  }
+
+  // ε labels on the right side
+  function buildLabels(Tbg) {
+    const labelTs = Ts_max + 3;
+    return epsList.map(eps => {
+      const L  = eps * B_lambda(Ts_max) + (1 - eps) * B_lambda(Tbg);
+      const Tb = Tb_from_L(L);
+      return { Ts: labelTs, Tb, label: eps.toFixed(2) };
+    });
+  }
+
+  const TsSlider = document.getElementById("TsRange");
+  const TsValue  = document.getElementById("TsValue");
+  const container = document.getElementById("nem-scatter-interactive");
+
+  function renderPlot() {
+    const Ts_sel = parseInt(TsSlider.value, 10);
+    TsValue.innerHTML = `T<sub>s</sub> = ${Ts_sel} K`;
+
+    // El valor del slider se usa como temperatura de fondo
+    const Tbg = Ts_sel;
+
+    const curves = buildCurves(Tbg);
+    const labels = buildLabels(Tbg);
+
+    const chart = Plot.plot({
+      height: 380,
+      marginLeft: 70,
+      marginRight: 80,
+      marginBottom: 45,
+      x: {
+        label: "Target temperature T_s (K)",
+        domain: [Ts_min, Ts_max]
+      },
+      y: {
+        label: "Apparent temperature T_b (K)",
+        domain: [250, 350],
+        grid: true
+      },
+      marks: [
+        // Curvas para cada ε
+        Plot.line(curves, {
+          x: "Ts",
+          y: "Tb",
+          stroke: d => d.eps,
+          strokeWidth: 2
+        }),
+        // Línea vertical en el Ts seleccionado
+        Plot.ruleX([Ts_sel], {
+          stroke: "#444",
+          strokeDasharray: "4 4"
+        }),
+        // Etiquetas de ε en el lado derecho
+        Plot.text(labels, {
+          x: "Ts",
+          y: "Tb",
+          text: "label",
+          dx: 4,
+          dy: 0,
+          fontSize: 12,
+          fontWeight: 600,
+          fill: "#111"
+        })
+      ]
+    });
+
+    container.innerHTML = "";
+    container.append(chart);
+  }
+
+  TsSlider.addEventListener("input", renderPlot);
+  renderPlot();
 </script>
+
+<p style="margin-top:0.8rem;">
+  The slider directly controls the target temperature \(T_s\) on the x-axis.
+  For each slider position, the same value is used as the background
+  temperature in the radiative transfer model, so that all curves intersect
+  exactly at the dashed vertical line. This makes it easy to see how apparent
+  temperature departs from \(T_s\) as emissivity decreases: high emissivity
+  curves follow the 1:1 line closely, while low emissivity curves become
+  progressively flatter.
+</p>
 
 
 
@@ -289,6 +819,17 @@ As an example, Figure B-6—taken from the original publication—illustrates th
     
   </ul>
 </div>
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -305,4 +846,3 @@ window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
 
 </section>
 </div>
-
